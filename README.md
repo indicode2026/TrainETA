@@ -60,3 +60,7 @@ railway functionality.
 ## Security
 
 Never put the RailRadar secret in `app.js`, GitHub, or any public frontend file.
+
+## Presentation demo mode
+
+If RailRadar live data is unavailable, the frontend can show clearly labelled sample data for these NDLS demo train numbers: **12002, 12951, 12309, 12424, 12434**. Demo data is shown only after selecting **New Delhi (NDLS)** and is explicitly marked as DEMO DATA; it must not be presented as real-time information.

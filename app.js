@@ -39,6 +39,79 @@ let allStations = FALLBACK_STATIONS.slice();
 let selectedStation = null;
 let currentTrainNumber = null;
 
+// DEMO MODE: these are clearly labelled sample values for presentations/video demos.
+// Live RailRadar data is always attempted first. Demo data is used only when the
+// live request fails, and only for these five Delhi/NDLS services.
+const DEMO_TRAINS = {
+  "12002": {
+    trainNumber: "12002", trainName: "Bhopal Shatabdi",
+    isLive: false, delayMinutes: 8,
+    currentLocation: { stationCode: "AGC", stationName: "Agra Cantt", speedKmh: 92 },
+    nextHalt: { stationCode: "NDLS", stationName: "New Delhi" },
+    lastUpdatedAt: new Date().toISOString(),
+    route: [
+      { stationCode:"RNC", stationName:"Bhopal Junction", scheduledArrival:"2026-09-05T05:00:00+05:30", scheduledDeparture:"2026-09-05T05:10:00+05:30" },
+      { stationCode:"AGC", stationName:"Agra Cantt", scheduledArrival:"2026-09-05T07:55:00+05:30", scheduledDeparture:"2026-09-05T08:00:00+05:30" },
+      { stationCode:"NDLS", stationName:"New Delhi", scheduledArrival:"2026-09-05T09:45:00+05:30", scheduledDeparture:"2026-09-05T09:50:00+05:30" }
+    ]
+  },
+  "12951": {
+    trainNumber: "12951", trainName: "Mumbai Central - New Delhi Rajdhani",
+    isLive: false, delayMinutes: 12,
+    currentLocation: { stationCode: "KOTA", stationName: "Kota Junction", speedKmh: 105 },
+    nextHalt: { stationCode: "NZM", stationName: "Hazrat Nizamuddin" },
+    lastUpdatedAt: new Date().toISOString(),
+    route: [
+      { stationCode:"BCT", stationName:"Mumbai Central", scheduledArrival:"2026-09-04T17:00:00+05:30", scheduledDeparture:"2026-09-04T17:30:00+05:30" },
+      { stationCode:"KOTA", stationName:"Kota Junction", scheduledArrival:"2026-09-05T05:10:00+05:30", scheduledDeparture:"2026-09-05T05:15:00+05:30" },
+      { stationCode:"NZM", stationName:"Hazrat Nizamuddin", scheduledArrival:"2026-09-05T08:10:00+05:30", scheduledDeparture:"2026-09-05T08:15:00+05:30" },
+      { stationCode:"NDLS", stationName:"New Delhi", scheduledArrival:"2026-09-05T08:40:00+05:30", scheduledDeparture:"2026-09-05T08:45:00+05:30" }
+    ]
+  },
+  "12309": {
+    trainNumber: "12309", trainName: "Rajdhani Express",
+    isLive: false, delayMinutes: 5,
+    currentLocation: { stationCode: "CNB", stationName: "Kanpur Central", speedKmh: 110 },
+    nextHalt: { stationCode: "NDLS", stationName: "New Delhi" },
+    lastUpdatedAt: new Date().toISOString(),
+    route: [
+      { stationCode:"HWH", stationName:"Howrah Junction", scheduledArrival:"2026-09-04T16:55:00+05:30", scheduledDeparture:"2026-09-04T17:00:00+05:30" },
+      { stationCode:"CNB", stationName:"Kanpur Central", scheduledArrival:"2026-09-05T08:00:00+05:30", scheduledDeparture:"2026-09-05T08:05:00+05:30" },
+      { stationCode:"NDLS", stationName:"New Delhi", scheduledArrival:"2026-09-05T12:55:00+05:30", scheduledDeparture:"2026-09-05T13:00:00+05:30" }
+    ]
+  },
+  "12424": {
+    trainNumber: "12424", trainName: "Dibrugarh Rajdhani",
+    isLive: false, delayMinutes: 18,
+    currentLocation: { stationCode: "PNBE", stationName: "Patna Junction", speedKmh: 88 },
+    nextHalt: { stationCode: "NDLS", stationName: "New Delhi" },
+    lastUpdatedAt: new Date().toISOString(),
+    route: [
+      { stationCode:"DBRG", stationName:"Dibrugarh", scheduledArrival:"2026-09-04T20:00:00+05:30", scheduledDeparture:"2026-09-04T20:10:00+05:30" },
+      { stationCode:"PNBE", stationName:"Patna Junction", scheduledArrival:"2026-09-05T07:30:00+05:30", scheduledDeparture:"2026-09-05T07:35:00+05:30" },
+      { stationCode:"NDLS", stationName:"New Delhi", scheduledArrival:"2026-09-05T18:20:00+05:30", scheduledDeparture:"2026-09-05T18:25:00+05:30" }
+    ]
+  },
+  "12434": {
+    trainNumber: "12434", trainName: "Chennai Rajdhani",
+    isLive: false, delayMinutes: 10,
+    currentLocation: { stationCode: "BPL", stationName: "Bhopal Junction", speedKmh: 98 },
+    nextHalt: { stationCode: "NDLS", stationName: "New Delhi" },
+    lastUpdatedAt: new Date().toISOString(),
+    route: [
+      { stationCode:"MAS", stationName:"MGR Chennai Central", scheduledArrival:"2026-09-04T06:10:00+05:30", scheduledDeparture:"2026-09-04T06:20:00+05:30" },
+      { stationCode:"BPL", stationName:"Bhopal Junction", scheduledArrival:"2026-09-05T07:50:00+05:30", scheduledDeparture:"2026-09-05T07:55:00+05:30" },
+      { stationCode:"NDLS", stationName:"New Delhi", scheduledArrival:"2026-09-05T14:50:00+05:30", scheduledDeparture:"2026-09-05T14:55:00+05:30" }
+    ]
+  }
+};
+
+function getDemoTrain(number) {
+  const source = DEMO_TRAINS[number];
+  if (!source) return null;
+  return JSON.parse(JSON.stringify(source));
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 }
@@ -336,7 +409,13 @@ async function loadLiveTrain(value) {
     if (!data || data.success === false) throw new Error(data?.error || "No train data returned.");
     renderLiveTrain(data);
   } catch (error) {
-    $("trainResult").innerHTML = `<div class="empty"><strong>Live train data could not be loaded.</strong><p>${escapeHtml(error.message)}</p><p>Check the train number, RailRadar API quota, and Cloudflare secret.</p></div>`;
+    const demo = getDemoTrain(number);
+    if (demo && String(selectedStation?.code || "").toUpperCase() === "NDLS") {
+      renderLiveTrain(demo);
+      $("trainResult").insertAdjacentHTML("afterbegin", `<div class="demoNotice"><strong>DEMO DATA</strong> — Sample Delhi/NDLS train data is being shown because live RailRadar data is unavailable. This is for presentation/demo only and is not real-time.</div>`);
+      return;
+    }
+    $("trainResult").innerHTML = `<div class="empty"><strong>Live train data could not be loaded.</strong><p>${escapeHtml(error.message)}</p><p>For a demo, select NDLS and try one of: 12002, 12951, 12309, 12424, or 12434.</p></div>`;
   }
 }
 
