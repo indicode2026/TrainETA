@@ -104,7 +104,8 @@ async function workerJson(path) {
   try { body = await response.json(); } catch (_) {}
   if (!response.ok || body?.success === false) {
     const message = body?.error?.message || body?.error || `Worker request failed (HTTP ${response.status})`;
-    throw new Error(String(message));
+    const code = body?.code ? ` [${body.code}]` : "";
+    throw new Error(`${String(message)}${code}`);
   }
   return body;
 }
@@ -112,30 +113,54 @@ async function workerJson(path) {
 async function loadStationDirectory() {
   setError("");
   renderStations(allStations);
-  statusEl.textContent = `Loading the complete Indian railway station directory…`;
+  statusEl.textContent = "Loading the complete Indian railway station directory…";
 
   try {
     const body = await workerJson("/stations/directory");
     const remote = normalizeStationList(body);
-    if (!remote.length) throw new Error("RailRadar returned an empty station directory.");
+
+    if (!remote.length) {
+      throw new Error("The Worker returned 0 railway stations.");
+    }
+
     allStations = mergeStations(remote);
-    try { localStorage.setItem("traineta.stationDirectory.v1", JSON.stringify(allStations)); } catch (_) {}
-    renderStations(allStations);
-    statusEl.textContent = `${allStations.length.toLocaleString()} railway stations loaded. Search by station name, city, or code.`;
-  } catch (error) {
+
     try {
-      const cached = JSON.parse(localStorage.getItem("traineta.stationDirectory.v1") || "null");
+      localStorage.setItem(
+        "traineta.stationDirectory.v2",
+        JSON.stringify(allStations)
+      );
+    } catch (_) {}
+
+    renderStations(allStations);
+    statusEl.textContent =
+      `${allStations.length.toLocaleString()} railway stations loaded. ` +
+      "Search by station name, city, or code.";
+  } catch (error) {
+    // Try the previous saved directory if available.
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem("traineta.stationDirectory.v2") || "null"
+      );
+
       if (Array.isArray(cached) && cached.length > 100) {
         allStations = mergeStations(cached);
         renderStations(allStations);
-        statusEl.textContent = `${allStations.length.toLocaleString()} railway stations loaded from saved directory. Live refresh unavailable.`;
-        setError(`Live station directory could not be refreshed: ${error.message}`);
+        statusEl.textContent =
+          `${allStations.length.toLocaleString()} railway stations loaded from saved directory.`;
+        setError(`Live directory refresh failed: ${error.message}`);
         return;
       }
     } catch (_) {}
+
+    // Never leave the user with a blank station area.
     renderStations(allStations);
-    statusEl.textContent = `${allStations.length} common railway stations shown. Live directory is unavailable.`;
-    setError(`Could not load the full station directory. Check the Cloudflare Worker and RAILRADAR_API_KEY. ${error.message}`);
+    statusEl.textContent =
+      `${allStations.length.toLocaleString()} railway stations available locally.`;
+
+    setError(
+      `Full railway directory could not be loaded. ${error.message}`
+    );
   }
 }
 

@@ -1,23 +1,66 @@
-TRAINETA — CLOUDFLARE SETUP
+TRAINETA — FINAL CLOUDFLARE SETUP
 
-1. Create a Cloudflare Worker named exactly:
-   traineta
+GITHUB REPOSITORY
+Repository name:
+TrainETA
 
-2. Upload worker.js (or connect the GitHub repository).
+CLOUDFLARE WORKER
+Worker name:
+traineta
 
-3. Add one Worker Secret:
-   Name: RAILRADAR_API_KEY
-   Value: YOUR_RAILRADAR_SECRET
+FRONTEND WORKER URL
+https://traineta.bharatchandrasirala.workers.dev
 
-4. The frontend expects:
-   https://traineta.bharatchandrasirala.workers.dev
+REQUIRED SECRET
+Cloudflare → Workers & Pages → traineta → Settings → Variables and Secrets
 
-5. Test these routes after deployment:
-   /health
-   /stations/directory
-   /stations/search?q=NDLS&limit=10
-   /train-station-board?code=NDLS
-   /train/12919/live?authoritative=true
+Type:
+Secret
 
-Do NOT put the RailRadar secret in app.js or GitHub.
-The Firebase web configuration in app.js is client-side configuration; Firebase Security Rules should still be configured appropriately.
+Name:
+RAILRADAR_API_KEY
+
+Value:
+Your RailRadar secret API key
+
+IMPORTANT:
+After adding or changing the secret, deploy/redeploy the Worker.
+A secret saved in the Dashboard but not included in the active deployment can still
+make the running Worker report that the key is missing.
+
+QUICK TEST
+Open:
+https://traineta.bharatchandrasirala.workers.dev/health
+
+It should return JSON containing:
+"success": true
+"status": "ok"
+"railRadarSecretConfigured": true
+
+Then test:
+https://traineta.bharatchandrasirala.workers.dev/stations/directory
+
+It should return a railway-station array and a positive count.
+
+Then test:
+https://traineta.bharatchandrasirala.workers.dev/stations/search?q=NDLS&limit=10
+
+Then:
+https://traineta.bharatchandrasirala.workers.dev/train/12919/live?authoritative=true
+
+GITHUB PAGES
+Upload the repository files as-is.
+No RailRadar secret goes into GitHub.
+Firebase web configuration may remain in app.js; it is client-side configuration.
+
+USER FLOW
+1. No browser location permission is requested.
+2. Railway station directory loads from RailRadar through Cloudflare.
+3. User can search by station name, city, or code.
+4. User selects a station.
+5. User enters a 5-digit train number.
+6. Live train status and ETA are loaded through the Worker.
+
+RAILRADAR LIMITS
+Live results depend on RailRadar availability, API quota, and the train's current
+telemetry. The app does not invent live values when the upstream service has no data.
