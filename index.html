@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="TrainETA — Indian Railway station search and live train ETA.">
+<title>TrainETA — Indian Railway Live ETA</title>
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">🚆</span><div><strong>TrainETA</strong><small>Indian Railway Live Train ETA</small></div></div>
+  <span class="live"><i></i> LIVE RAIL DATA</span>
+</header>
+<main>
+  <section class="hero">
+    <div class="eyebrow">STEP 01 · CHOOSE A RAILWAY STATION</div>
+    <h1>Find your railway<br><span>station.</span></h1>
+    <p>Search the Indian railway station directory by station name, city, or station code. No location permission is required.</p>
+    <div class="searchBox">
+      <input id="searchInput" type="search" autocomplete="off" placeholder="Search station, city or code — e.g. New Delhi / NDLS" aria-label="Search railway stations">
+      <button id="searchBtn" type="button">Search</button>
+      <button id="clearBtn" class="clear" type="button" aria-label="Clear search">×</button>
+    </div>
+    <div id="status" class="status">Loading Indian railway stations…</div>
+    <div id="error" class="error" hidden></div>
+  </section>
+  <section id="results" class="results" hidden>
+    <div class="sectionHead"><div><div class="eyebrow">STEP 02 · SELECT STATION</div><h2>Railway stations</h2><p id="summary"></p></div></div>
+    <div id="stationList"></div>
+  </section>
+  <section id="stationDetail" class="detail" hidden></section>
+</main>
+<footer>TrainETA · Indian Railway station directory and live train data powered through RailRadar.</footer>
+<script src="app.js?v=1"></script>
+</body>
+</html>

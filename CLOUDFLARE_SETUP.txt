@@ -1,0 +1,23 @@
+TRAINETA — CLOUDFLARE SETUP
+
+1. Create a Cloudflare Worker named exactly:
+   traineta
+
+2. Upload worker.js (or connect the GitHub repository).
+
+3. Add one Worker Secret:
+   Name: RAILRADAR_API_KEY
+   Value: YOUR_RAILRADAR_SECRET
+
+4. The frontend expects:
+   https://traineta.bharatchandrasirala.workers.dev
+
+5. Test these routes after deployment:
+   /health
+   /stations/directory
+   /stations/search?q=NDLS&limit=10
+   /train-station-board?code=NDLS
+   /train/12919/live?authoritative=true
+
+Do NOT put the RailRadar secret in app.js or GitHub.
+The Firebase web configuration in app.js is client-side configuration; Firebase Security Rules should still be configured appropriately.
